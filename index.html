@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Creative Suite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Sora:wght@600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-deep: #0a0a0a;
+            --bg-charcoal: #12121c;
+            --slate-800: #1a1a2e;
+            --slate-700: #2c2c44;
+            --slate-500: #64748b;
+            --slate-400: #94a3b8;
+            --indigo-500: #6366f1;
+            --indigo-400: #818cf8;
+            --pink-500: #ec4899;
+            --teal-400: #00d9ff;
+            --green-400: #00ff88;
+            --white: #ffffff;
+            --font-sans: 'Inter', sans-serif;
+            --font-display: 'Sora', sans-serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-deep); /* Fallback color */
+            background-image: 
+                linear-gradient(rgba(10, 10, 10, 0.7), rgba(18, 18, 28, 0.8)),
+                url('https://images.unsplash.com/photo-1554189097-90d8360ae8df?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--slate-400);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Simple scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-charcoal);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--slate-700);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--slate-500);
+        }
+        
+        .font-sora {
+            font-family: var(--font-display);
+        }
+        
+        /* Custom prose styles for marked output */
+        .prose {
+            max-width: none;
+        }
+
+        /* Custom animation for fade-in */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        /* Glass Morphism Effect */
+        .glass-morphism {
+            background: rgba(26, 26, 46, 0.6); /* --slate-800 with opacity */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Primary Button Style */
+        .btn-primary {
+            background-image: linear-gradient(to right, var(--indigo-500), var(--pink-500));
+            box-shadow: 0 4px 15px 0 rgba(99, 102, 241, 0.3), 0 2px 8px 0 rgba(236, 72, 153, 0.2);
+            transition: all 0.3s ease-in-out;
+        }
+        .btn-primary:hover {
+            background-position: 100% 0;
+            box-shadow: 0 6px 20px 0 rgba(99, 102, 241, 0.4), 0 3px 10px 0 rgba(236, 72, 153, 0.3);
+        }
+        .btn-primary:disabled {
+             background: var(--slate-700);
+             box-shadow: none;
+             cursor: not-allowed;
+             opacity: 0.6;
+        }
+
+    </style>
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.29.0",
+    "marked": "https://aistudiocdn.com/marked@^16.4.1",
+    "jszip": "https://aistudiocdn.com/jszip@^3.10.1",
+    "react-dropzone": "https://aistudiocdn.com/react-dropzone@^14.3.8"
+  }
+}
+</script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>
