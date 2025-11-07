@@ -200,7 +200,7 @@ function App() {
     const renderInputs = () => {
         const needsImage = [TABS[0], TABS[2], TABS[4], TABS[5]].includes(activeTab);
         const needsPrompt = [TABS[2], TABS[3], TABS[4]].includes(activeTab);
-        
+
         const promptPlaceholders: { [key: string]: string } = {
             [TABS[2]]: "Ex: 'Muda o fundo para uma praia tropical'",
             [TABS[3]]: "Ex: 'Um astronauta a andar de skate na lua, estilo cartoon'",
@@ -208,33 +208,75 @@ function App() {
         };
 
         return (
-            <div className="w-full max-w-lg mx-auto flex flex-col gap-8">
+            <div className="w-full max-w-3xl mx-auto flex flex-col gap-8">
                 {needsImage && <ImageUploader onImageUpload={handleImageUpload} previewUrl={sourceImage.previewUrl} />}
                 {needsPrompt && (
-                    <div>
-                        <label htmlFor="prompt" className="block text-sm font-medium text-slate-300 mb-2">Comando (Prompt)</label>
-                        <textarea
-                            id="prompt"
-                            rows={3}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:ring-indigo-500 focus:border-indigo-500 transition glass-morphism"
-                            placeholder={promptPlaceholders[activeTab] || ""}
-                            value={prompt}
-                            onChange={(e) => setPrompt(e.target.value)}
-                        />
+                    <div className="animate-fade-in">
+                        <label htmlFor="prompt" className="block text-base font-semibold text-white mb-3 font-sora flex items-center gap-2">
+                            <span className="text-2xl">💭</span>
+                            Comando (Prompt)
+                        </label>
+                        <div className="relative">
+                            <textarea
+                                id="prompt"
+                                rows={4}
+                                className="w-full glass-card border-2 border-slate-700 rounded-2xl p-4 md:p-5 text-white text-base focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-300 resize-none hover:border-slate-600"
+                                placeholder={promptPlaceholders[activeTab] || ""}
+                                value={prompt}
+                                onChange={(e) => setPrompt(e.target.value)}
+                            />
+                            <div className="absolute bottom-3 right-3 text-xs text-slate-500 font-mono">
+                                {prompt.length} caracteres
+                            </div>
+                        </div>
                     </div>
                 )}
                 {activeTab === TABS[4] && ( // Aspect ratio for video
-                     <div>
-                        <label htmlFor="aspectRatio" className="block text-sm font-medium text-slate-300 mb-2">Proporção do Vídeo</label>
-                        <select 
-                            id="aspectRatio"
-                            value={aspectRatio}
-                            onChange={(e) => setAspectRatio(e.target.value as AspectRatio)}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:ring-indigo-500 focus:border-indigo-500 transition glass-morphism"
-                        >
-                            <option value="16:9">16:9 (Paisagem)</option>
-                            <option value="9:16">9:16 (Retrato)</option>
-                        </select>
+                     <div className="animate-fade-in">
+                        <label htmlFor="aspectRatio" className="block text-base font-semibold text-white mb-3 font-sora flex items-center gap-2">
+                            <span className="text-2xl">📐</span>
+                            Proporção do Vídeo
+                        </label>
+                        <div className="grid grid-cols-2 gap-4">
+                            <button
+                                type="button"
+                                onClick={() => setAspectRatio('16:9')}
+                                className={`
+                                    glass-card p-6 rounded-2xl border-2 transition-all duration-300
+                                    ${aspectRatio === '16:9'
+                                        ? 'border-indigo-500 bg-indigo-500/10 scale-105'
+                                        : 'border-slate-700 hover:border-slate-600 hover:scale-105'
+                                    }
+                                `}
+                            >
+                                <div className="flex flex-col items-center gap-3">
+                                    <div className="w-16 h-10 rounded border-2 border-current"></div>
+                                    <div className="text-center">
+                                        <div className="font-bold text-white">16:9</div>
+                                        <div className="text-xs text-slate-400">Paisagem</div>
+                                    </div>
+                                </div>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setAspectRatio('9:16')}
+                                className={`
+                                    glass-card p-6 rounded-2xl border-2 transition-all duration-300
+                                    ${aspectRatio === '9:16'
+                                        ? 'border-indigo-500 bg-indigo-500/10 scale-105'
+                                        : 'border-slate-700 hover:border-slate-600 hover:scale-105'
+                                    }
+                                `}
+                            >
+                                <div className="flex flex-col items-center gap-3">
+                                    <div className="w-10 h-16 rounded border-2 border-current"></div>
+                                    <div className="text-center">
+                                        <div className="font-bold text-white">9:16</div>
+                                        <div className="text-xs text-slate-400">Retrato</div>
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>
@@ -242,36 +284,50 @@ function App() {
     }
     
     const renderButton = () => {
-        const buttonText: { [key: string]: string } = {
-            [TABS[0]]: "Gerar Fotos",
-            [TABS[2]]: "Aplicar Edição",
-            [TABS[3]]: "Gerar Imagem",
-            [TABS[4]]: "Gerar Vídeo",
-            [TABS[5]]: "Gerar Conteúdo",
+        const buttonConfig: { [key: string]: { text: string; icon: string } } = {
+            [TABS[0]]: { text: "Gerar Fotos Profissionais", icon: "📸" },
+            [TABS[2]]: { text: "Aplicar Edição Mágica", icon: "✨" },
+            [TABS[3]]: { text: "Gerar Imagem Única", icon: "🎨" },
+            [TABS[4]]: { text: "Gerar Vídeo Animado", icon: "🎬" },
+            [TABS[5]]: { text: "Gerar Conteúdo Criativo", icon: "📝" },
         };
-        
+
         const isDisabled = isLoading || ( [TABS[0], TABS[2], TABS[5]].includes(activeTab) && !sourceImage.file) || ([TABS[2], TABS[3]].includes(activeTab) && !prompt) || (activeTab === TABS[4] && !sourceImage.file) ;
 
         if (activeTab === TABS[4] && !isVeoKeySelected) {
             return (
-                 <div className="text-center">
-                    <button onClick={handleSelectVeoKey} className="btn-primary text-white font-bold py-3 px-6 rounded-lg text-lg">
-                        Selecionar Chave de API para Vídeo
+                 <div className="text-center space-y-4 animate-fade-in">
+                    <button onClick={handleSelectVeoKey} className="btn-primary text-white font-bold py-4 px-8 rounded-2xl text-lg hover:scale-105 transition-transform">
+                        🔑 Selecionar Chave de API para Vídeo
                     </button>
-                    <p className="text-xs text-slate-500 mt-2">
-                        A geração de vídeo com Veo requer uma chave de API selecionada. <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="underline hover:text-indigo-300">Saber mais sobre faturação.</a>
-                    </p>
+                    <div className="glass-card p-4 rounded-xl max-w-md mx-auto">
+                        <p className="text-sm text-slate-400 leading-relaxed">
+                            A geração de vídeo com Veo requer uma chave de API selecionada.{' '}
+                            <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="text-indigo-400 underline hover:text-indigo-300">
+                                Saber mais sobre faturação
+                            </a>
+                        </p>
+                    </div>
                 </div>
             )
         }
+
+        const config = buttonConfig[activeTab];
 
         return (
             <button
                 onClick={handleGenerate}
                 disabled={isDisabled}
-                className="btn-primary text-white font-bold py-3 px-8 rounded-lg text-lg flex items-center justify-center w-full max-w-xs mx-auto"
+                className="btn-primary text-white font-bold py-4 px-10 rounded-2xl text-lg md:text-xl flex items-center justify-center gap-3 w-full max-w-md mx-auto hover:scale-105 transition-transform disabled:hover:scale-100"
             >
-                {isLoading ? <Loader isButtonLoader={true} /> : buttonText[activeTab]}
+                {isLoading ? (
+                    <Loader isButtonLoader={true} />
+                ) : (
+                    <>
+                        <span className="text-2xl">{config?.icon}</span>
+                        <span>{config?.text}</span>
+                    </>
+                )}
             </button>
         )
     }
@@ -304,26 +360,44 @@ function App() {
     }
 
     return (
-        <div className="min-h-screen text-white font-sans">
-            <div 
-                className={`fixed top-4 right-4 z-50 transition-all duration-300 ${toast.show ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}
+        <div className="min-h-screen text-white font-sans overflow-x-hidden">
+            {/* Toast Notification */}
+            <div
+                className={`fixed top-6 right-6 z-50 transition-all duration-500 ${toast.show ? 'translate-x-0 opacity-100 scale-100' : 'translate-x-full opacity-0 scale-95'}`}
             >
-                <div className="glass-morphism rounded-lg p-4 text-white flex items-center gap-3 border-red-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>{toast.message}</span>
+                <div className={`glass-card rounded-2xl p-5 text-white flex items-center gap-4 border-2 shadow-2xl min-w-[320px] ${
+                    toast.type === 'error' ? 'border-red-500/50' : 'border-green-500/50'
+                }`}>
+                    {toast.type === 'error' ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    )}
+                    <span className="font-medium">{toast.message}</span>
                 </div>
             </div>
 
             <WelcomeModal isOpen={showWelcome} onClose={handleWelcomeClose} />
             <Header />
-            <main className="container mx-auto px-4 pb-24">
-                <div className="max-w-6xl mx-auto flex flex-col items-center gap-12">
+            <main className="container mx-auto px-4 pb-32">
+                <div className="max-w-7xl mx-auto flex flex-col items-center gap-8 md:gap-12">
                     <Tabs tabs={TABS} activeTab={activeTab} setActiveTab={handleTabChange} />
                     {renderActiveTabContent()}
                 </div>
             </main>
+
+            {/* Footer */}
+            <footer className="py-8 mt-16 border-t border-slate-800">
+                <div className="container mx-auto px-4 text-center">
+                    <p className="text-slate-500 text-sm font-organic">
+                        Criado com 💜 usando Gemini AI • {new Date().getFullYear()}
+                    </p>
+                </div>
+            </footer>
         </div>
     );
 }
