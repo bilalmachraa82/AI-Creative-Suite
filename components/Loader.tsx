@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface LoaderProps {
     isButtonLoader?: boolean;
@@ -8,21 +8,30 @@ interface LoaderProps {
 const getTaskMessage = (task?: string) => {
     switch(task) {
         case 'photoshoot':
-            return 'A IA está a criar as suas fotos de produto...';
+            return { message: 'A IA está a criar as suas fotos de produto...', emoji: '📸', color: '#667eea' };
         case 'edit':
-            return 'A aplicar as suas edições mágicas...';
+            return { message: 'A aplicar as suas edições mágicas...', emoji: '✨', color: '#764ba2' };
         case 'generate':
-            return 'A materializar a sua imaginação...';
+            return { message: 'A materializar a sua imaginação...', emoji: '🎨', color: '#fa709a' };
         case 'video':
-            return 'A gerar o seu vídeo...';
+            return { message: 'A gerar o seu vídeo...', emoji: '🎬', color: '#4facfe' };
         case 'content':
-            return 'A escrever conteúdo criativo...';
+            return { message: 'A escrever conteúdo criativo...', emoji: '📝', color: '#00f2fe' };
         default:
-            return 'A processar o seu pedido...';
+            return { message: 'A processar o seu pedido...', emoji: '🤖', color: '#667eea' };
     }
 }
 
 export const Loader: React.FC<LoaderProps> = ({ isButtonLoader = false, task }) => {
+    const [dots, setDots] = useState('');
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setDots(prev => prev.length >= 3 ? '' : prev + '.');
+        }, 500);
+        return () => clearInterval(interval);
+    }, []);
+
     if (isButtonLoader) {
         return (
              <>
@@ -35,16 +44,86 @@ export const Loader: React.FC<LoaderProps> = ({ isButtonLoader = false, task }) 
         )
     }
 
+    const taskInfo = getTaskMessage(task);
+
     return (
-        <div className="flex flex-col items-center justify-center space-y-4 text-center p-4">
-            <div className="relative w-20 h-20">
-                <div className="absolute inset-0 rounded-full border-4 border-slate-700"></div>
-                <div className="absolute inset-0 rounded-full border-4 border-t-transparent border-l-transparent border-indigo-500 animate-spin"></div>
+        <div className="flex flex-col items-center justify-center space-y-8 text-center p-8 animate-fade-in-scale">
+            {/* Animated Loader with Multiple Rings */}
+            <div className="relative w-32 h-32">
+                {/* Outer Ring */}
+                <div className="absolute inset-0 rounded-full border-4 border-slate-800/30"></div>
+
+                {/* Middle Ring - Gradient */}
+                <div
+                    className="absolute inset-2 rounded-full border-4 border-transparent animate-spin"
+                    style={{
+                        borderTopColor: taskInfo.color,
+                        borderRightColor: taskInfo.color,
+                        animationDuration: '1.5s'
+                    }}
+                />
+
+                {/* Inner Ring - Reverse */}
+                <div
+                    className="absolute inset-6 rounded-full border-4 border-transparent animate-spin"
+                    style={{
+                        borderBottomColor: taskInfo.color,
+                        borderLeftColor: taskInfo.color,
+                        animationDuration: '2s',
+                        animationDirection: 'reverse'
+                    }}
+                />
+
+                {/* Center Glow */}
+                <div
+                    className="absolute inset-0 rounded-full animate-pulse"
+                    style={{
+                        background: `radial-gradient(circle, ${taskInfo.color}20, transparent 70%)`,
+                        animationDuration: '2s'
+                    }}
+                />
+
+                {/* Emoji Center */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-5xl animate-bounce" style={{ animationDuration: '1s' }}>
+                        {taskInfo.emoji}
+                    </span>
+                </div>
             </div>
-            <p className="text-slate-200 font-medium text-lg font-sora">{getTaskMessage(task)}</p>
-            <p className="text-slate-400 text-sm max-w-xs">
-                {task === 'video' ? 'Isto pode demorar alguns minutos. Por favor, não feche esta janela.' : 'Isto pode demorar alguns momentos.'}
-            </p>
+
+            {/* Message with Shimmer Effect */}
+            <div className="space-y-3 max-w-md">
+                <p className="text-slate-100 font-semibold text-xl md:text-2xl font-sora">
+                    {taskInfo.message}
+                    <span className="inline-block w-12 text-left">{dots}</span>
+                </p>
+
+                <p className="text-slate-400 text-sm md:text-base font-organic">
+                    {task === 'video'
+                        ? '🎥 Isto pode demorar alguns minutos. Por favor, não feche esta janela.'
+                        : '⚡ Processando com a velocidade da luz...'}
+                </p>
+
+                {/* Progress Indicator */}
+                <div className="mt-6 w-full max-w-xs mx-auto">
+                    <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                        <div
+                            className="h-full rounded-full animate-pulse"
+                            style={{
+                                background: `linear-gradient(90deg, transparent, ${taskInfo.color}, transparent)`,
+                                animation: 'shimmer 2s linear infinite'
+                            }}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <style jsx>{`
+                @keyframes shimmer {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(200%); }
+                }
+            `}</style>
         </div>
     );
 };
