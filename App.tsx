@@ -15,6 +15,7 @@ const VideoResult = lazy(() => import('./components/VideoResult'));
 const TextResult = lazy(() => import('./components/TextResult'));
 const WelcomeModal = lazy(() => import('./components/WelcomeModal'));
 const SettingsModal = lazy(() => import('./components/SettingsModal'));
+const PromptTemplatesModal = lazy(() => import('./components/PromptTemplatesModal'));
 import {
     generateProductImages,
     editImageWithPrompt,
@@ -67,6 +68,7 @@ function App() {
     const [isVeoKeySelected, setIsVeoKeySelected] = useState(true);
     const [showWelcome, setShowWelcome] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
+    const [showTemplates, setShowTemplates] = useState(false);
 
     useEffect(() => {
         const hasVisited = localStorage.getItem('ai-creative-suite-visited');
@@ -260,10 +262,23 @@ function App() {
                                 <span className="text-2xl">💭</span>
                                 Comando (Prompt)
                             </label>
-                            <PromptHistoryDropdown
-                                currentTab={activeTab}
-                                onSelectPrompt={(selectedPrompt) => setPrompt(selectedPrompt)}
-                            />
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowTemplates(true)}
+                                    className="flex items-center gap-2 px-3 py-2 rounded-xl glass-card border border-slate-700 hover:border-slate-600 transition-all text-sm text-slate-300 hover:text-white hover:scale-105"
+                                    aria-label="Ver templates"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                    </svg>
+                                    <span className="hidden md:inline">Templates</span>
+                                </button>
+                                <PromptHistoryDropdown
+                                    currentTab={activeTab}
+                                    onSelectPrompt={(selectedPrompt) => setPrompt(selectedPrompt)}
+                                />
+                            </div>
                         </div>
                         <div className="relative">
                             <textarea
@@ -448,6 +463,14 @@ function App() {
                 </Suspense>
                 <Suspense fallback={null}>
                     <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+                </Suspense>
+                <Suspense fallback={null}>
+                    <PromptTemplatesModal
+                        isOpen={showTemplates}
+                        onClose={() => setShowTemplates(false)}
+                        onSelectTemplate={(template) => setPrompt(template)}
+                        currentTab={activeTab}
+                    />
                 </Suspense>
                 <Header onOpenSettings={() => setShowSettings(true)} />
                 <main className="container mx-auto px-4 pb-32">
