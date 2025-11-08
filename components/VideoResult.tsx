@@ -43,3 +43,6 @@ export const VideoResult: React.FC<VideoResultProps> = ({ videoUrl }) => {
         </div>
     );
 };
+
+
+export default VideoResult;

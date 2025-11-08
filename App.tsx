@@ -1,16 +1,18 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { Header } from './components/Header';
 import { Tabs } from './components/Tabs';
 import { ImageUploader } from './components/ImageUploader';
 import { Loader } from './components/Loader';
 import { GeneratedImagesGrid } from './components/GeneratedImagesGrid';
-import { VideoResult } from './components/VideoResult';
-import { TextResult } from './components/TextResult';
-import { BatchProcessor } from './components/BatchProcessor';
-import { WelcomeModal } from './components/WelcomeModal';
-import { SettingsModal } from './components/SettingsModal';
 import { fileToBase64 } from './utils/fileUtils';
+
+// Lazy load heavy components
+const BatchProcessor = lazy(() => import('./components/BatchProcessor'));
+const VideoResult = lazy(() => import('./components/VideoResult'));
+const TextResult = lazy(() => import('./components/TextResult'));
+const WelcomeModal = lazy(() => import('./components/WelcomeModal'));
+const SettingsModal = lazy(() => import('./components/SettingsModal'));
 import {
     generateProductImages,
     editImageWithPrompt,
@@ -101,7 +103,25 @@ function App() {
         setPrompt('');
         setActiveTab(tab);
     }
-    
+
+    // Cleanup blob URLs to prevent memory leaks
+    useEffect(() => {
+        return () => {
+            if (sourceImage.previewUrl && sourceImage.previewUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(sourceImage.previewUrl);
+            }
+        };
+    }, [sourceImage.previewUrl]);
+
+    // Cleanup video URL on unmount
+    useEffect(() => {
+        return () => {
+            if (videoUrl && videoUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(videoUrl);
+            }
+        };
+    }, [videoUrl]);
+
     const checkVeoKey = async () => {
         if (window.aistudio && typeof window.aistudio.hasSelectedApiKey === 'function') {
             try {
@@ -339,15 +359,27 @@ function App() {
         if (isLoading) return <Loader task={loadingTask || undefined} />;
         // Error is now handled by the toast
         if (generatedImages.length > 0) return <GeneratedImagesGrid images={generatedImages} />;
-        if (videoUrl) return <VideoResult videoUrl={videoUrl} />;
-        if (textContent) return <TextResult content={textContent} />;
+        if (videoUrl) return (
+            <Suspense fallback={<Loader />}>
+                <VideoResult videoUrl={videoUrl} />
+            </Suspense>
+        );
+        if (textContent) return (
+            <Suspense fallback={<Loader />}>
+                <TextResult content={textContent} />
+            </Suspense>
+        );
         // Empty state could go here
         return null;
     }
     
     const renderActiveTabContent = () => {
         if (activeTab === TABS[1]) {
-            return <BatchProcessor />;
+            return (
+                <Suspense fallback={<Loader />}>
+                    <BatchProcessor />
+                </Suspense>
+            );
         }
         return (
             <>
@@ -385,8 +417,12 @@ function App() {
                     </div>
                 </div>
 
-                <WelcomeModal isOpen={showWelcome} onClose={handleWelcomeClose} />
-                <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+                <Suspense fallback={null}>
+                    <WelcomeModal isOpen={showWelcome} onClose={handleWelcomeClose} />
+                </Suspense>
+                <Suspense fallback={null}>
+                    <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+                </Suspense>
                 <Header onOpenSettings={() => setShowSettings(true)} />
                 <main className="container mx-auto px-4 pb-32">
                     <div className="max-w-7xl mx-auto flex flex-col items-center gap-8 md:gap-12">

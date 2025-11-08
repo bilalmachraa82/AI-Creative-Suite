@@ -82,3 +82,5 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
         </div>
     );
 };
+
+export default WelcomeModal;

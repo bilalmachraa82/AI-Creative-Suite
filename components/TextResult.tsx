@@ -69,3 +69,5 @@ export const TextResult: React.FC<TextResultProps> = ({ content }) => {
         </div>
     );
 };
+
+export default TextResult;

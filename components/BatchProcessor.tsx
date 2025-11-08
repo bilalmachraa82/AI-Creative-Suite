@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { GoogleGenAI } from "@google/genai";
 import { fileToBase64 } from '../utils/fileUtils';
@@ -20,7 +20,18 @@ const CONCURRENT_LIMIT = 4;
 export const BatchProcessor: React.FC = () => {
     const [files, setFiles] = useState<ProcessFile[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
-    
+
+    // Cleanup blob URLs on unmount to prevent memory leaks
+    useEffect(() => {
+        return () => {
+            files.forEach(f => {
+                if (f.previewUrl && f.previewUrl.startsWith('blob:')) {
+                    URL.revokeObjectURL(f.previewUrl);
+                }
+            });
+        };
+    }, [files]);
+
     const onDrop = useCallback((acceptedFiles: File[]) => {
         const newFiles: ProcessFile[] = acceptedFiles.map(file => ({
             id: `${file.name}-${file.lastModified}-${Math.random()}`,
@@ -167,3 +178,5 @@ export const BatchProcessor: React.FC = () => {
         </div>
     );
 };
+
+export default BatchProcessor;
