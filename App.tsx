@@ -5,7 +5,9 @@ import { Tabs } from './components/Tabs';
 import { ImageUploader } from './components/ImageUploader';
 import { Loader } from './components/Loader';
 import { GeneratedImagesGrid } from './components/GeneratedImagesGrid';
+import { PromptHistoryDropdown } from './components/PromptHistoryDropdown';
 import { fileToBase64 } from './utils/fileUtils';
+import { addPromptToHistory } from './utils/promptHistory';
 
 // Lazy load heavy components
 const BatchProcessor = lazy(() => import('./components/BatchProcessor'));
@@ -186,7 +188,7 @@ function App() {
         if (isLoading) return;
         resetState();
         setIsLoading(true);
-        
+
         try {
             switch (activeTab) {
                 case TABS[0]: // Photoshoot
@@ -199,18 +201,21 @@ function App() {
                     if (!sourceImage.base64) throw new Error("Por favor, carregue uma imagem.");
                     if (!prompt) throw new Error("Por favor, insira um comando de edição.");
                     setLoadingTask('edit');
+                    addPromptToHistory(prompt, activeTab); // Save to history
                     const editedImage = await editImageWithPrompt(sourceImage.base64, sourceImage.mimeType, prompt);
                     setGeneratedImages([{ src: editedImage, id: 'edited' }]);
                     break;
                 case TABS[3]: // Generate Image
                      if (!prompt) throw new Error("Por favor, insira um comando para gerar a imagem.");
                     setLoadingTask('generate');
+                    addPromptToHistory(prompt, activeTab); // Save to history
                     const newImage = await generateImageFromText(prompt);
                     setGeneratedImages([{ src: newImage, id: 'generated' }]);
                     break;
                 case TABS[4]: // Generate Video
                     if (!sourceImage.base64) throw new Error("Por favor, carregue uma imagem.");
                     setLoadingTask('video');
+                    if (prompt) addPromptToHistory(prompt, activeTab); // Save to history if prompt exists
                     const url = await generateVideoFromImage(sourceImage.base64, sourceImage.mimeType, prompt, aspectRatio);
                     setVideoUrl(url);
                     break;
@@ -250,10 +255,16 @@ function App() {
                 {needsImage && <ImageUploader onImageUpload={handleImageUpload} previewUrl={sourceImage.previewUrl} />}
                 {needsPrompt && (
                     <div className="animate-fade-in">
-                        <label htmlFor="prompt" className="block text-base font-semibold text-white mb-3 font-sora flex items-center gap-2">
-                            <span className="text-2xl">💭</span>
-                            Comando (Prompt)
-                        </label>
+                        <div className="flex items-center justify-between mb-3">
+                            <label htmlFor="prompt" className="block text-base font-semibold text-white font-sora flex items-center gap-2">
+                                <span className="text-2xl">💭</span>
+                                Comando (Prompt)
+                            </label>
+                            <PromptHistoryDropdown
+                                currentTab={activeTab}
+                                onSelectPrompt={(selectedPrompt) => setPrompt(selectedPrompt)}
+                            />
+                        </div>
                         <div className="relative">
                             <textarea
                                 id="prompt"
