@@ -6,6 +6,7 @@ import { ImageUploader } from './components/ImageUploader';
 import { Loader } from './components/Loader';
 import { GeneratedImagesGrid } from './components/GeneratedImagesGrid';
 import { PromptHistoryDropdown } from './components/PromptHistoryDropdown';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { fileToBase64 } from './utils/fileUtils';
 import { addPromptToHistory } from './utils/promptHistory';
 
@@ -399,16 +400,24 @@ function App() {
     const renderResults = () => {
         if (isLoading) return <Loader task={loadingTask || undefined} />;
         // Error is now handled by the toast
-        if (generatedImages.length > 0) return <GeneratedImagesGrid images={generatedImages} onToggleFavorite={handleToggleFavorite} />;
+        if (generatedImages.length > 0) return (
+            <ErrorBoundary resetKeys={[generatedImages.length]}>
+                <GeneratedImagesGrid images={generatedImages} onToggleFavorite={handleToggleFavorite} />
+            </ErrorBoundary>
+        );
         if (videoUrl) return (
-            <Suspense fallback={<Loader />}>
-                <VideoResult videoUrl={videoUrl} />
-            </Suspense>
+            <ErrorBoundary resetKeys={[videoUrl]}>
+                <Suspense fallback={<Loader />}>
+                    <VideoResult videoUrl={videoUrl} />
+                </Suspense>
+            </ErrorBoundary>
         );
         if (textContent) return (
-            <Suspense fallback={<Loader />}>
-                <TextResult content={textContent} />
-            </Suspense>
+            <ErrorBoundary resetKeys={[textContent]}>
+                <Suspense fallback={<Loader />}>
+                    <TextResult content={textContent} />
+                </Suspense>
+            </ErrorBoundary>
         );
         // Empty state could go here
         return null;
@@ -417,13 +426,15 @@ function App() {
     const renderActiveTabContent = () => {
         if (activeTab === TABS[1]) {
             return (
-                <Suspense fallback={<Loader />}>
-                    <BatchProcessor />
-                </Suspense>
+                <ErrorBoundary resetKeys={[activeTab]}>
+                    <Suspense fallback={<Loader />}>
+                        <BatchProcessor />
+                    </Suspense>
+                </ErrorBoundary>
             );
         }
         return (
-            <>
+            <ErrorBoundary resetKeys={[activeTab]}>
                 {renderInputs()}
                 <div className="w-full text-center">
                     {renderButton()}
@@ -431,7 +442,7 @@ function App() {
                 <div className="w-full flex justify-center mt-8">
                     {renderResults()}
                 </div>
-            </>
+            </ErrorBoundary>
         )
     }
 
