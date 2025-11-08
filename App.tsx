@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { Header } from './components/Header';
 import { Tabs } from './components/Tabs';
 import { ImageUploader } from './components/ImageUploader';
@@ -8,10 +9,11 @@ import { VideoResult } from './components/VideoResult';
 import { TextResult } from './components/TextResult';
 import { BatchProcessor } from './components/BatchProcessor';
 import { WelcomeModal } from './components/WelcomeModal';
+import { SettingsModal } from './components/SettingsModal';
 import { fileToBase64 } from './utils/fileUtils';
-import { 
-    generateProductImages, 
-    editImageWithPrompt, 
+import {
+    generateProductImages,
+    editImageWithPrompt,
     generateImageFromText,
     generateVideoFromImage,
     generateProductDescription,
@@ -57,12 +59,13 @@ function App() {
     const [generatedImages, setGeneratedImages] = useState<GeneratedProductImage[]>([]);
     const [videoUrl, setVideoUrl] = useState<string>('');
     const [textContent, setTextContent] = useState<string>('');
-    
+
     const [isVeoKeySelected, setIsVeoKeySelected] = useState(true);
     const [showWelcome, setShowWelcome] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
 
     useEffect(() => {
-        const hasVisited = sessionStorage.getItem('ai-creative-suite-visited');
+        const hasVisited = localStorage.getItem('ai-creative-suite-visited');
         if (!hasVisited) {
             setShowWelcome(true);
         }
@@ -82,7 +85,7 @@ function App() {
     };
 
     const handleWelcomeClose = () => {
-        sessionStorage.setItem('ai-creative-suite-visited', 'true');
+        localStorage.setItem('ai-creative-suite-visited', 'true');
         setShowWelcome(false);
     }
 
@@ -360,45 +363,48 @@ function App() {
     }
 
     return (
-        <div className="min-h-screen text-white font-sans overflow-x-hidden">
-            {/* Toast Notification */}
-            <div
-                className={`fixed top-6 right-6 z-50 transition-all duration-500 ${toast.show ? 'translate-x-0 opacity-100 scale-100' : 'translate-x-full opacity-0 scale-95'}`}
-            >
-                <div className={`glass-card rounded-2xl p-5 text-white flex items-center gap-4 border-2 shadow-2xl min-w-[320px] ${
-                    toast.type === 'error' ? 'border-red-500/50' : 'border-green-500/50'
-                }`}>
-                    {toast.type === 'error' ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    )}
-                    <span className="font-medium">{toast.message}</span>
+        <ThemeProvider>
+            <div className="min-h-screen text-white font-sans overflow-x-hidden">
+                {/* Toast Notification */}
+                <div
+                    className={`fixed top-6 right-6 z-50 transition-all duration-500 ${toast.show ? 'translate-x-0 opacity-100 scale-100' : 'translate-x-full opacity-0 scale-95'}`}
+                >
+                    <div className={`glass-card rounded-2xl p-5 text-white flex items-center gap-4 border-2 shadow-2xl min-w-[320px] ${
+                        toast.type === 'error' ? 'border-red-500/50' : 'border-green-500/50'
+                    }`}>
+                        {toast.type === 'error' ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        )}
+                        <span className="font-medium">{toast.message}</span>
+                    </div>
                 </div>
+
+                <WelcomeModal isOpen={showWelcome} onClose={handleWelcomeClose} />
+                <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+                <Header onOpenSettings={() => setShowSettings(true)} />
+                <main className="container mx-auto px-4 pb-32">
+                    <div className="max-w-7xl mx-auto flex flex-col items-center gap-8 md:gap-12">
+                        <Tabs tabs={TABS} activeTab={activeTab} setActiveTab={handleTabChange} />
+                        {renderActiveTabContent()}
+                    </div>
+                </main>
+
+                {/* Footer */}
+                <footer className="py-8 mt-16 border-t border-slate-800">
+                    <div className="container mx-auto px-4 text-center">
+                        <p className="text-slate-500 text-sm font-organic">
+                            Criado com 💜 usando Gemini AI • {new Date().getFullYear()}
+                        </p>
+                    </div>
+                </footer>
             </div>
-
-            <WelcomeModal isOpen={showWelcome} onClose={handleWelcomeClose} />
-            <Header />
-            <main className="container mx-auto px-4 pb-32">
-                <div className="max-w-7xl mx-auto flex flex-col items-center gap-8 md:gap-12">
-                    <Tabs tabs={TABS} activeTab={activeTab} setActiveTab={handleTabChange} />
-                    {renderActiveTabContent()}
-                </div>
-            </main>
-
-            {/* Footer */}
-            <footer className="py-8 mt-16 border-t border-slate-800">
-                <div className="container mx-auto px-4 text-center">
-                    <p className="text-slate-500 text-sm font-organic">
-                        Criado com 💜 usando Gemini AI • {new Date().getFullYear()}
-                    </p>
-                </div>
-            </footer>
-        </div>
+        </ThemeProvider>
     );
 }
 
