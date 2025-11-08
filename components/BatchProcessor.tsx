@@ -1,8 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { GoogleGenAI } from "@google/genai";
 import { fileToBase64 } from '../utils/fileUtils';
-import { generationPrompts, generateSingleImageWithPrompt, GeneratedProductImage } from '../services/geminiService';
+import { generateProductImages, GeneratedProductImage } from '../services/apiClient';
 import { createZipAndDownload } from '../utils/zipUtils';
 
 type FileStatus = 'queued' | 'processing' | 'completed' | 'error';
@@ -60,27 +59,23 @@ export const BatchProcessor: React.FC = () => {
 
     const handleProcessing = async () => {
         setIsProcessing(true);
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         let filesToProcess = files.filter(f => f.status === 'queued' || f.status === 'error');
 
         const processFile = async (fileToProcess: ProcessFile) => {
             setFiles(prev => prev.map(f => f.id === fileToProcess.id ? { ...f, status: 'processing' } : f));
             try {
                 const base64 = await fileToBase64(fileToProcess.file);
-                
-                const imagePromises = generationPrompts.map(async (p) => {
-                    const imageUrl = await generateSingleImageWithPrompt(ai, base64, fileToProcess.file.type, p.prompt);
-                    return { src: imageUrl, id: p.id };
-                });
-                
-                const images = await Promise.all(imagePromises);
+
+                // Call API route instead of Gemini directly
+                const images = await generateProductImages(base64, fileToProcess.file.type);
+
                 setFiles(prev => prev.map(f => f.id === fileToProcess.id ? { ...f, status: 'completed', generatedImages: images } : f));
             } catch (err) {
                 console.error(`Error processing ${fileToProcess.file.name}:`, err);
                 setFiles(prev => prev.map(f => f.id === fileToProcess.id ? { ...f, status: 'error' } : f));
             }
         };
-        
+
         const worker = async () => {
             while(filesToProcess.length > 0) {
                 const file = filesToProcess.shift();

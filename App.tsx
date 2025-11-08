@@ -24,7 +24,7 @@ import {
     generateVideoFromImage,
     generateProductDescription,
     GeneratedProductImage
-} from './services/geminiService';
+} from './services/apiClient';
 
 // Fix: Resolved a TypeScript error regarding subsequent property declarations for `window.aistudio`.
 // The property must be of type `AIStudio`, so this change defines that interface
