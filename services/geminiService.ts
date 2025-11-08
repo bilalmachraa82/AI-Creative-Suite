@@ -3,6 +3,7 @@ import { GoogleGenAI, Modality } from "@google/genai";
 export interface GeneratedProductImage {
     src: string;
     id: string;
+    favorite?: boolean;
 }
 
 // === PHOTOSHOOT SERVICE ===

@@ -91,6 +91,21 @@ function App() {
         setShowWelcome(false);
     }
 
+    const handleToggleFavorite = useCallback((uniqueId: string) => {
+        setGeneratedImages(prevImages => {
+            // Parse the unique ID (format: "imageId-index")
+            const lastDashIndex = uniqueId.lastIndexOf('-');
+            const index = parseInt(uniqueId.substring(lastDashIndex + 1));
+
+            return prevImages.map((img, idx) => {
+                if (idx === index) {
+                    return { ...img, favorite: !img.favorite };
+                }
+                return img;
+            });
+        });
+    }, []);
+
     const resetState = useCallback(() => {
         setGeneratedImages([]);
         setVideoUrl('');
@@ -358,7 +373,7 @@ function App() {
     const renderResults = () => {
         if (isLoading) return <Loader task={loadingTask || undefined} />;
         // Error is now handled by the toast
-        if (generatedImages.length > 0) return <GeneratedImagesGrid images={generatedImages} />;
+        if (generatedImages.length > 0) return <GeneratedImagesGrid images={generatedImages} onToggleFavorite={handleToggleFavorite} />;
         if (videoUrl) return (
             <Suspense fallback={<Loader />}>
                 <VideoResult videoUrl={videoUrl} />
