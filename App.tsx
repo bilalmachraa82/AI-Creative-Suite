@@ -7,8 +7,12 @@ import { Loader } from './components/Loader';
 import { GeneratedImagesGrid } from './components/GeneratedImagesGrid';
 import { PromptHistoryDropdown } from './components/PromptHistoryDropdown';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 import { fileToBase64 } from './utils/fileUtils';
 import { addPromptToHistory } from './utils/promptHistory';
+import { keyboardShortcuts } from './utils/keyboardShortcuts';
+import { registerServiceWorker } from './utils/registerSW';
+import { saveImage, getAllImages, initDB, type StoredImage } from './utils/indexedDB';
 
 // Lazy load heavy components
 const BatchProcessor = lazy(() => import('./components/BatchProcessor'));
@@ -17,6 +21,8 @@ const TextResult = lazy(() => import('./components/TextResult'));
 const WelcomeModal = lazy(() => import('./components/WelcomeModal'));
 const SettingsModal = lazy(() => import('./components/SettingsModal'));
 const PromptTemplatesModal = lazy(() => import('./components/PromptTemplatesModal'));
+const KeyboardShortcutsModal = lazy(() => import('./components/KeyboardShortcutsModal'));
+const ExportOptionsModal = lazy(() => import('./components/ExportOptionsModal'));
 import {
     generateProductImages,
     editImageWithPrompt,
@@ -70,6 +76,9 @@ function App() {
     const [showWelcome, setShowWelcome] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [showTemplates, setShowTemplates] = useState(false);
+    const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
+    const [showExportOptions, setShowExportOptions] = useState(false);
+    const [exportImage, setExportImage] = useState<string>('');
 
     useEffect(() => {
         const hasVisited = localStorage.getItem('ai-creative-suite-visited');
@@ -86,6 +95,93 @@ function App() {
             return () => clearTimeout(timer);
         }
     }, [toast.show]);
+
+    // Initialize IndexedDB, Service Worker, and Keyboard Shortcuts
+    useEffect(() => {
+        // Initialize IndexedDB
+        initDB().then(() => {
+            console.log('[IndexedDB] Database initialized');
+        }).catch((error) => {
+            console.error('[IndexedDB] Initialization failed:', error);
+        });
+
+        // Register Service Worker
+        registerServiceWorker();
+
+        // Register keyboard shortcuts
+        keyboardShortcuts.register({
+            key: '?',
+            description: 'Ver atalhos de teclado',
+            category: 'general',
+            action: () => setShowKeyboardShortcuts(true),
+        });
+
+        keyboardShortcuts.register({
+            key: 'Escape',
+            description: 'Fechar modais',
+            category: 'general',
+            action: () => {
+                setShowWelcome(false);
+                setShowSettings(false);
+                setShowTemplates(false);
+                setShowKeyboardShortcuts(false);
+                setShowExportOptions(false);
+            },
+        });
+
+        keyboardShortcuts.register({
+            key: 's',
+            ctrl: true,
+            cmd: true,
+            description: 'Guardar imagem atual',
+            category: 'images',
+            action: () => {
+                if (generatedImages.length > 0) {
+                    const link = document.createElement('a');
+                    link.href = generatedImages[0].src;
+                    link.download = `ai-creative-${Date.now()}.png`;
+                    link.click();
+                }
+            },
+        });
+
+        keyboardShortcuts.register({
+            key: 'f',
+            description: 'Toggle favorito',
+            category: 'images',
+            action: () => {
+                if (generatedImages.length > 0) {
+                    handleToggleFavorite(`${generatedImages[0].id}-0`);
+                }
+            },
+        });
+
+        return () => {
+            keyboardShortcuts.clear();
+        };
+    }, []);
+
+    // Save generated images to IndexedDB
+    useEffect(() => {
+        if (generatedImages.length > 0) {
+            generatedImages.forEach((img, index) => {
+                const storedImage: StoredImage = {
+                    id: `${img.id}-${Date.now()}-${index}`,
+                    src: img.src,
+                    type: activeTab.includes('Photoshoot') ? 'photoshoot' :
+                          activeTab.includes('Edit') ? 'edit' :
+                          activeTab.includes('Gerar Imagem') ? 'generate' : 'video',
+                    timestamp: Date.now(),
+                    favorite: img.favorite,
+                    prompt,
+                    metadata: {
+                        variantId: img.id,
+                    },
+                };
+                saveImage(storedImage).catch(console.error);
+            });
+        }
+    }, [generatedImages]);
 
     const showToast = (message: string, type: 'error' | 'success' = 'error') => {
         setToast({ show: true, message, type });
@@ -110,6 +206,40 @@ function App() {
             });
         });
     }, []);
+
+    const handleExport = useCallback((format: 'png' | 'jpg' | 'webp', quality: number) => {
+        if (!exportImage) return;
+
+        const canvas = document.createElement('canvas');
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = exportImage;
+
+        img.onload = () => {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                ctx.drawImage(img, 0, 0);
+
+                const mimeType = format === 'png' ? 'image/png' :
+                                format === 'jpg' ? 'image/jpeg' : 'image/webp';
+                const qualityValue = format === 'png' ? 1 : quality / 100;
+
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `ai-creative-${Date.now()}.${format}`;
+                        link.click();
+                        URL.revokeObjectURL(url);
+                        showToast('Imagem exportada com sucesso!', 'success');
+                    }
+                }, mimeType, qualityValue);
+            }
+        };
+    }, [exportImage]);
 
     const resetState = useCallback(() => {
         setGeneratedImages([]);
@@ -469,6 +599,7 @@ function App() {
                     </div>
                 </div>
 
+                {/* Modals */}
                 <Suspense fallback={null}>
                     <WelcomeModal isOpen={showWelcome} onClose={handleWelcomeClose} />
                 </Suspense>
@@ -483,6 +614,24 @@ function App() {
                         currentTab={activeTab}
                     />
                 </Suspense>
+                <Suspense fallback={null}>
+                    <KeyboardShortcutsModal
+                        isOpen={showKeyboardShortcuts}
+                        onClose={() => setShowKeyboardShortcuts(false)}
+                    />
+                </Suspense>
+                <Suspense fallback={null}>
+                    <ExportOptionsModal
+                        isOpen={showExportOptions}
+                        onClose={() => setShowExportOptions(false)}
+                        imageSrc={exportImage}
+                        onExport={handleExport}
+                    />
+                </Suspense>
+
+                {/* PWA Install Prompt */}
+                <PWAInstallPrompt />
+
                 <Header onOpenSettings={() => setShowSettings(true)} />
                 <main className="container mx-auto px-4 pb-32">
                     <div className="max-w-7xl mx-auto flex flex-col items-center gap-8 md:gap-12">
